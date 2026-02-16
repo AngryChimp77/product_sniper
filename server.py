@@ -45,7 +45,3 @@ Respond ONLY in JSON:
 
     return jsonify(response.choices[0].message.content)
 
-@app.route("/")
-def home():
-    return send_from_directory("static", "index.html")
-
