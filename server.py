@@ -1,133 +1,46 @@
-import json
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from pytrends.request import TrendReq
-from openai import OpenAI
-
-# =========================
-# CONFIG
-# =========================
-
 import os
+from flask import Flask, request, jsonify, send_from_directory
 from openai import OpenAI
 
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-client = OpenAI(api_key=OPENAI_API_KEY)
+app = Flask(__name__, static_folder="static")
 
+client = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY")
+)
 
-
-# =========================
-# INIT
-# =========================
-
-app = FastAPI()
-
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-@app.get("/")
+@app.route("/")
 def home():
-    return FileResponse("static/index.html")
+    return send_from_directory("static", "index.html")
 
 
-pytrends = TrendReq(hl="en-US", tz=360)
+@app.route("/analyze", methods=["POST"])
+def analyze():
 
-
-# =========================
-# HELPERS
-# =========================
-
-def get_google_trends(keyword: str) -> int:
-    try:
-        pytrends.build_payload([keyword], timeframe="today 12-m")
-        data = pytrends.interest_over_time()
-
-        if data.empty:
-            return 0
-
-        return int(data[keyword].mean())
-
-    except Exception:
-        return 0
-
-
-def ai_analyze(context: str) -> dict:
+    data = request.json
+    link = data.get("link")
 
     prompt = f"""
-You are a conservative ecommerce analyst.
+You are a strict dropshipping product validator.
 
-Score 0–2:
+Analyze this product link:
+{link}
 
-Demand
-Pain
-Visual
-Margin
-Competition
-
-Return JSON:
+Respond ONLY in JSON:
 
 {{
-  "demand": 0,
-  "pain": 0,
-  "visual": 0,
-  "margin": 0,
-  "competition": 0,
-  "total": 0,
-  "verdict": "KILL/TEST/SCALE",
-  "reason": "Short explanation"
+"total": number 1-10,
+"verdict": "KILL" or "TEST",
+"reason": "short explanation"
 }}
-
-Data:
-{context}
 """
 
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4.1-mini",
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.2
-        )
-
-        raw = response.choices[0].message.content
-
-        return json.loads(raw)
-
-    except Exception as e:
-        return {
-            "error": str(e)
-        }
-
-
-
-# =========================
-# API
-# =========================
-
-@app.get("/analyze")
-def analyze(link: str):
-
-    keyword = (
-        link.split("/")[-1]
-        .replace("-", " ")
-        .replace("_", " ")
-        [:40]
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.7
     )
 
-    trends = get_google_trends(keyword)
+    return jsonify(response.choices[0].message.content)
 
-    context = f"""
-Product: {link}
-Keyword: {keyword}
-Trends: {trends}/100
-"""
-
-    result = ai_analyze(context)
-
-    return {
-        "link": link,
-        "keyword": keyword,
-        "google_trends": trends,
-        "analysis": result
-    }
