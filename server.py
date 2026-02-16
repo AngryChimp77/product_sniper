@@ -1,8 +1,9 @@
+
 import os
 from flask import Flask, request, jsonify, send_from_directory
 from openai import OpenAI
 
-app = Flask(__name__, static_folder="static")
+app = Flask(__name__, static_folder="static", static_url_path="")
 
 client = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY")
@@ -43,4 +44,8 @@ Respond ONLY in JSON:
     )
 
     return jsonify(response.choices[0].message.content)
+
+@app.route("/")
+def home():
+    return send_from_directory("static", "index.html")
 
