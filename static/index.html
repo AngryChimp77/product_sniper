@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Product Sniper</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #020617;
+      color: white;
+      text-align: center;
+      padding: 50px;
+    }
+
+    input {
+      width: 400px;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+    }
+
+    button {
+      padding: 12px 20px;
+      background: #38bdf8;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-left: 10px;
+    }
+
+    #result-box {
+      margin-top: 30px;
+      padding: 25px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid #334155;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+#result {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: #9ca3af;
+}
+
+/* Loading Spinner */
+
+#loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+  color: #ccc;
+  font-size: 16px;
+}
+
+.hidden {
+  display: none;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255,255,255,0.2);
+  border-top: 3px solid #4fc3f7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+#history-box {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  background: #020617;
+}
+
+#history-box h3 {
+  margin-bottom: 10px;
+}
+
+#history-list {
+  list-style: none;
+  padding: 0;
+}
+
+#history-list li {
+  padding: 6px 0;
+  border-bottom: 1px solid #1e293b;
+  font-size: 14px;
+}
+
+  </style>
+</head>
+
+<body>
+
+  <h1>🚀 Product Sniper</h1>
+  <p>Paste a product link and analyze it.</p>
+
+  <input
+    id="link"
+    type="text"
+    placeholder="Paste product link here"
+  >
+
+<button id="analyzeBtn" onclick="analyze()">Analyze</button>
+
+<div id="loading" style="display:none;">
+  <div class="spinner"></div>
+  <span>Analyzing...</span>
+</div>
+
+<div id="result"></div>
+
+
+  <div id="result-box">
+    <div id="score"></div>
+    <div id="verdict"></div>
+    <div id="reason"></div>
+  </div>
+
+<div id="history-box">
+  <h3>📜 Recent Analyses</h3>
+  <ul id="history-list"></ul>
+</div>
+
+
+<script>
+
+
+let isRunning = false;
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const btn = document.getElementById("analyzeBtn");
+
+    btn.addEventListener("click", analyze);
+
+});
+
+
+
+function setLoading(state) {
+
+    const btn = document.getElementById("analyzeBtn");
+
+    const loading = document.getElementById("loading");
+
+    if (state) {
+
+        btn.disabled = true;
+
+        btn.innerText = "Working...";
+
+        loading.style.display = "flex";
+
+    } else {
+
+        btn.disabled = false;
+
+        btn.innerText = "Analyze";
+
+        loading.style.display = "none";
+
+    }
+
+}
+
+
+
+async function analyze() {
+
+    if (isRunning) return;
+
+    isRunning = true;
+
+    const input = document.getElementById("link");
+
+    const result = document.getElementById("result");
+
+    const link = input.value.trim();
+
+    if (!link) {
+
+        alert("Paste link first");
+
+        isRunning = false;
+
+        return;
+
+    }
+
+    result.innerText = "";
+
+    setLoading(true);
+
+    try {
+
+        const controller = new AbortController();
+
+        const timeout = setTimeout(() => controller.abort(), 10000);
+
+        const res = await fetch(
+
+            `/analyze?link=${encodeURIComponent(link)}`,
+
+            { signal: controller.signal }
+
+        );
+
+        clearTimeout(timeout);
+
+        if (!res.ok) throw new Error("Server error");
+
+        const data = await res.json();
+
+        showResult(data);
+
+    }
+
+    catch (err) {
+
+        if (err.name === "AbortError")
+
+            result.innerText = "❌ Timeout";
+
+        else
+
+            result.innerText = "❌ Network error";
+
+    }
+
+    finally {
+
+        setLoading(false);
+
+        isRunning = false;
+
+    }
+
+}
+
+
+
+function showResult(data) {
+
+    if (!data || !data.analysis) {
+
+        document.getElementById("result").innerText =
+
+            "❌ Invalid analysis";
+
+        return;
+
+    }
+
+    let analysis = data.analysis;
+
+    if (typeof analysis === "string")
+
+        analysis = JSON.parse(analysis);
+
+    document.getElementById("score").innerText =
+
+        "Score: " + analysis.total + " / 10";
+
+    const verdictBox = document.getElementById("verdict");
+
+    verdictBox.innerText =
+
+        "Verdict: " + analysis.verdict;
+
+    verdictBox.style.color =
+
+        analysis.verdict === "SCALE"
+
+            ? "lime"
+
+            : analysis.verdict === "TEST"
+
+            ? "orange"
+
+            : "red";
+
+    document.getElementById("reason").innerText =
+
+        "Reason: " + analysis.reason;
+
+}
+
+</script>
+
+
+</body>
+</html>
+
+

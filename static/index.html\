@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Product Sniper</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #020617;
+      color: white;
+      text-align: center;
+      padding: 50px;
+    }
+
+    input {
+      width: 400px;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+    }
+
+    button {
+      padding: 12px 20px;
+      background: #38bdf8;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-left: 10px;
+    }
+
+    #result-box {
+      margin-top: 30px;
+      padding: 25px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid #334155;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+#result {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: #9ca3af;
+}
+
+/* Loading Spinner */
+
+#loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+  color: #ccc;
+  font-size: 16px;
+}
+
+.hidden {
+  display: none;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255,255,255,0.2);
+  border-top: 3px solid #4fc3f7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+  </style>
+</head>
+
+<body>
+
+  <h1>🚀 Product Sniper</h1>
+  <p>Paste a product link and analyze it.</p>
+
+  <input
+    id="link"
+    type="text"
+    placeholder="Paste product link here"
+  >
+
+  <button id="analyzeBtn" onclick="analyze()">Analyze</button>
+
+<div id="loading" class="hidden">
+  <div class="spinner"></div>
+  <span>Analyzing...</span>
+</div>
+
+<div id="result"></div>
+
+
+  <div id="result-box">
+    <div id="score"></div>
+    <div id="verdict"></div>
+    <div id="reason"></div>
+  </div>
+
+<script>
+
+
+async function analyze() {
+
+  const input = document.getElementById("link");
+  const btn = document.getElementById("analyzeBtn");
+  const result = document.getElementById("result");
+  const loading = document.getElementById("loading");
+
+  const link = input.value.trim();
+
+  if (!link) {
+    alert("Please paste a link first.");
+    return;
+  }
+
+  // UI ON
+  btn.disabled = true;
+  btn.innerText = "Working...";
+  loading.classList.remove("hidden");
+  result.innerText = "";
+
+  try {
+
+    const res = await fetch(
+      `/analyze?link=${encodeURIComponent(link)}`
+    );
+
+    if (!res.ok) {
+      throw new Error("Server error");
+    }
+
+    const data = await res.json();
+
+    console.log("SERVER DATA:", data);
+
+    showResult(data);
+
+  } catch (err) {
+
+    console.error(err);
+
+    result.innerText = "❌ Server error.";
+
+  } finally {
+
+    // ALWAYS reset UI
+    btn.disabled = false;
+    btn.innerText = "Analyze";
+    loading.classList.add("hidden");
+
+  }
+}
+
+
+function showResult(data) {
+
+  console.log("RAW DATA:", data);
+
+  if (!data || !data.analysis) {
+    document.getElementById("result").innerText =
+      "❌ No analysis returned.";
+    return;
+  }
+
+  let analysis = data.analysis;
+
+  // If backend sent string → convert to object
+  if (typeof analysis === "string") {
+    try {
+      analysis = JSON.parse(analysis);
+    } catch (e) {
+      console.error("Parse error:", e);
+      document.getElementById("result").innerText =
+        "❌ Analysis parse error.";
+      return;
+    }
+  }
+
+  // Validate fields
+  if (
+    analysis.total === undefined ||
+    analysis.verdict === undefined ||
+    analysis.reason === undefined
+  ) {
+    console.error("Bad analysis:", analysis);
+    document.getElementById("result").innerText =
+      "❌ Invalid analysis format.";
+    return;
+  }
+
+  // Safe to display now
+  const total = analysis.total;
+  const verdict = analysis.verdict;
+  const reason = analysis.reason;
+
+  document.getElementById("score").innerText =
+    "Score: " + total + " / 10";
+
+  const verdictBox =
+    document.getElementById("verdict");
+
+  verdictBox.innerText =
+    "Verdict: " + verdict;
+
+  if (verdict === "SCALE") {
+    verdictBox.style.color = "lime";
+  } else if (verdict === "TEST") {
+    verdictBox.style.color = "orange";
+  } else {
+    verdictBox.style.color = "red";
+  }
+
+  document.getElementById("reason").innerText =
+    "Reason: " + reason;
+}
+
+</script>
+
+
+</body>
+</html>
+
+
