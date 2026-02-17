@@ -4,7 +4,14 @@ from openai import OpenAI
 
 app = Flask(__name__, static_folder="static")
 
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+    api_key=os.environ.get("OPENAI_API_KEY"),
+    timeout=30
+)
+client = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY"),
+    timeout=20.0,
+    max_retries=1
+)
 
 @app.route("/")
 def home():
@@ -13,29 +20,37 @@ def home():
 @app.route("/analyze", methods=["POST"])
 def analyze():
 
+    print("REQUEST RECEIVED")
+
     try:
 
         data = request.get_json()
+
         link = data.get("link")
 
-        prompt = f"Analyze this product: {link}"
+        print("LINK:", link)
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}]
+            messages=[
+                {"role": "user", "content": link}
+            ],
+            max_tokens=50
         )
+
+        print("OPENAI RESPONDED")
 
         result = response.choices[0].message.content
 
         return jsonify({
-            "score": "7",
-            "verdict": "TEST",
+            "score": "OK",
+            "verdict": "OK",
             "reason": result
         })
 
     except Exception as e:
 
-        print(e)
+        print("ERROR:", e)
 
         return jsonify({
             "score": "Error",
