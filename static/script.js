@@ -1,5 +1,3 @@
-find ~ -name "server.py"
-
 function analyzeProduct() {
 
     const link = document.getElementById("productLink").value;
@@ -17,24 +15,19 @@ function analyzeProduct() {
         })
 
     })
-
     .then(response => response.json())
-
     .then(data => {
 
         document.getElementById("score").innerText = data.score;
-
         document.getElementById("verdict").innerText = data.verdict;
-
         document.getElementById("reason").innerText = data.reason;
 
     })
-
     .catch(error => {
 
-        console.error(error);
+        console.log(error);
 
-        alert("Error analyzing product");
+        alert("Network error");
 
     });
 
