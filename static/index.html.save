@@ -113,12 +113,14 @@
   <p>Paste a product link and analyze it.</p>
 
   <input
-    id="link"
-    type="text"
-    placeholder="Paste product link here"
-  >
+    
+<input
+id="productLink"
+type="text"
+placeholder="Paste product link here"
+>
 
-<button id="analyzeBtn" onclick="analyze()">Analyze</button>
+<button id="analyzeBtn" onclick="analyzeProduct()">Analyze</button>
 
 <div id="loading" style="display:none;">
   <div class="spinner"></div>
@@ -140,205 +142,171 @@
 </div>
 
 
+function analyze() {
+
 <script>
 
 
-  const btn = document.getElementById("analyzeBtn");
-  btn.addEventListener("click", analyze);
+let isRunning = false;
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const btn = document.getElementById("analyzeBtn");
+
+    btn.addEventListener("click", analyze);
+
 });
-document.addEventListener("DOMContentLoaded", () => {
 
-renderHistory();
-  console.log("Already running, blocked.");
-});
 
-function setLoading(isLoading) {
 
-  const btn = document.getElementById("analyzeBtn");
-  const loading = document.getElementById("loading");
+function setLoading(state) {
 
-  if (isLoading) {
+    const btn = document.getElementById("analyzeBtn");
 
-    btn.disabled = true;
-    btn.innerText = "Working...";
-    loading.style.display = "flex";
+    const loading = document.getElementById("loading");
 
-  } else {
+    if (state) {
 
-    btn.disabled = false;
-    btn.innerText = "Analyze";
-    loading.style.display = "none";
+        btn.disabled = true;
 
-  }
+        btn.innerText = "Working...";
+
+        loading.style.display = "flex";
+
+    } else {
+
+        btn.disabled = false;
+
+        btn.innerText = "Analyze";
+
+        loading.style.display = "none";
+
+    }
+
 }
+
 
 
 async function analyze() {
 
-  const input = document.getElementById("link");
-  const result = document.getElementById("result");
+    if (isRunning) return;
 
-  const link = input.value.trim();
+    isRunning = true;
 
-  if (!link) {
-    alert("Please paste a link first.");
-    return;
-  }
+    const input = document.getElementById("link");
 
-  setLoading(true);
-  result.innerText = "";
+    const result = document.getElementById("result");
 
-try {
+    const link = input.value.trim();
 
-  const controller = new AbortController();
+    if (!link) {
 
-  const timeout = setTimeout(() => {
-    controller.abort();
-  }, 10000); // 10s timeout
+        alert("Paste link first");
 
+        isRunning = false;
 
-  const res = await fetch(
-    `/analyze?link=${encodeURIComponent(link)}`,
-    {
-      signal: controller.signal
+        return;
+
     }
-  );
 
-  clearTimeout(timeout);
+    result.innerText = "";
 
+    setLoading(true);
 
-  if (!res.ok) {
-    throw new Error("Server error");
-  }
+    try {
 
-  const data = await res.json();
+        const controller = new AbortController();
 
-  console.log("SERVER:", data);
+        const timeout = setTimeout(() => controller.abort(), 10000);
 
-  showResult(data);
+        const res = await fetch(
+
+            `/analyze?link=${encodeURIComponent(link)}`,
+
+            { signal: controller.signal }
+
+        );
+
+        clearTimeout(timeout);
+
+        if (!res.ok) throw new Error("Server error");
+
+        const data = await res.json();
+
+        showResult(data);
+
+    }
+
+    catch (err) {
+
+        if (err.name === "AbortError")
+
+            result.innerText = "❌ Timeout";
+
+        else
+
+            result.innerText = "❌ Network error";
+
+    }
+
+    finally {
+
+        setLoading(false);
+
+        isRunning = false;
+
+    }
 
 }
 
-  } catch (err) {
-
-    console.error(err);
-
-if (err.name === "AbortError") {
-  result.innerText = "❌ Connection timeout. Check internet.";
-} else {
-  result.innerText = "❌ Network / server error.";
-}
-
-  } finally {
-
-    setLoading(false);
-
-  }
-}
 
 
 function showResult(data) {
 
-  if (!data || !data.analysis) {
-    document.getElementById("result").innerText =
-      "❌ No analysis returned.";
-    return;
-  }
+    if (!data || !data.analysis) {
 
-  let analysis = data.analysis;
+        document.getElementById("result").innerText =
 
-  // Convert string → object if needed
-  if (typeof analysis === "string") {
-    try {
-      analysis = JSON.parse(analysis);
-    } catch (e) {
-      document.getElementById("result").innerText =
-        "❌ Analysis parse error.";
-      return;
+            "❌ Invalid analysis";
+
+        return;
+
     }
-  }
 
-  // Safety check
-  if (analysis.total === undefined ||
-      analysis.verdict === undefined ||
-      analysis.reason === undefined) {
+    let analysis = data.analysis;
 
-    document.getElementById("result").innerText =
-      "❌ Invalid analysis format.";
-    return;
-  }
+    if (typeof analysis === "string")
 
-  const total = analysis.total;
-  const verdict = analysis.verdict;
-  const reason = analysis.reason;
+        analysis = JSON.parse(analysis);
 
-  // Clear error message
-  document.getElementById("result").innerText = "";
+    document.getElementById("score").innerText =
 
-  document.getElementById("score").innerText =
-    "Score: " + total + " / 10";
+        "Score: " + analysis.total + " / 10";
 
-  const verdictBox =
-    document.getElementById("verdict");
+    const verdictBox = document.getElementById("verdict");
 
-  verdictBox.innerText =
-    "Verdict: " + verdict;
+    verdictBox.innerText =
 
-  if (verdict === "SCALE") {
-    verdictBox.style.color = "lime";
-  }
-  else if (verdict === "TEST") {
-    verdictBox.style.color = "orange";
-  }
-  else {
-    verdictBox.style.color = "red";
-  }
+        "Verdict: " + analysis.verdict;
 
-    "Reason: " + reason;
-document.getElementById("reason").innerText =
-    "Reason: " + reason;
-saveToHistory(data.link, analysis);
-}
+    verdictBox.style.color =
 
-function saveToHistory(link, analysis) {
+        analysis.verdict === "SCALE"
 
-  let history = JSON.parse(
-    localStorage.getItem("history") || "[]"
-  );
+            ? "lime"
 
-  history.unshift({
-    link,
-    score: analysis.total,
-    verdict: analysis.verdict
-  });
+            : analysis.verdict === "TEST"
 
-  history = history.slice(0, 10);
+            ? "orange"
 
-  localStorage.setItem("history", JSON.stringify(history));
+            : "red";
 
-  renderHistory();
-}
+    document.getElementById("reason").innerText =
 
-function renderHistory() {
+        "Reason: " + analysis.reason;
 
-  const list = document.getElementById("history-list");
-
-  const history = JSON.parse(
-    localStorage.getItem("history") || "[]"
-  );
-
-  list.innerHTML = "";
-
-  history.forEach(item => {
-
-    const li = document.createElement("li");
-
-    li.innerText =
-      `${item.link} — ${item.verdict} (${item.score}/10)`;
-
-    list.appendChild(li);
-
-  });
 }
 
 </script>

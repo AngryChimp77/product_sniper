@@ -193,7 +193,7 @@ async function analyze() {
 
     isRunning = true;
 
-    const input = document.getElementById("link");
+    const input = document.getElementById("productLink");
 
     const result = document.getElementById("result");
 
@@ -213,27 +213,35 @@ async function analyze() {
 
     setLoading(true);
 
-    try {
+try {
 
-        const controller = new AbortController();
+    const controller = new AbortController();
 
-        const timeout = setTimeout(() => controller.abort(), 10000);
+    const timeout = setTimeout(() => controller.abort(), 60000);
 
-        const res = await fetch(
+    const res = await fetch("/analyze", {
 
-            `/analyze?link=${encodeURIComponent(link)}`,
+        method: "POST",
 
-            { signal: controller.signal }
+        headers: {
+            "Content-Type": "application/json"
+        },
 
-        );
+        body: JSON.stringify({ link }),
 
-        clearTimeout(timeout);
+        signal: controller.signal
 
-        if (!res.ok) throw new Error("Server error");
+    });
 
-        const data = await res.json();
+    clearTimeout(timeout);
 
-        showResult(data);
+    if (!res.ok) throw new Error("Server error");
+
+    const data = await res.json();
+
+    showResult(data);
+
+}
 
     }
 
