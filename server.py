@@ -1,47 +1,48 @@
-
 import os
 from flask import Flask, request, jsonify, send_from_directory
 from openai import OpenAI
 
-app = Flask(__name__, static_folder="static", static_url_path="")
+app = Flask(__name__, static_folder="static")
 
-client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY")
-)
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 @app.route("/")
 def home():
     return send_from_directory("static", "index.html")
 
-
 @app.route("/analyze", methods=["POST"])
 def analyze():
 
-    data = request.json
-    link = data.get("link")
+    try:
 
-    prompt = f"""
-You are a strict dropshipping product validator.
+        data = request.get_json()
+        link = data.get("link")
 
-Analyze this product link:
-{link}
+        prompt = f"Analyze this product: {link}"
 
-Respond ONLY in JSON:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}]
+        )
 
-{{
-"total": number 1-10,
-"verdict": "KILL" or "TEST",
-"reason": "short explanation"
-}}
-"""
+        result = response.choices[0].message.content
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.7
-    )
+        return jsonify({
+            "score": "7",
+            "verdict": "TEST",
+            "reason": result
+        })
 
-    return jsonify(response.choices[0].message.content)
+    except Exception as e:
+
+        print(e)
+
+        return jsonify({
+            "score": "Error",
+            "verdict": "Error",
+            "reason": str(e)
+        })
+
+if __name__ == "__main__":
+    app.run()
 
