@@ -239,6 +239,25 @@ try {
 
     const data = await res.json();
 
+    showResult(data);
+
+}
+catch (err) {
+
+    if (err.name === "AbortError")
+        result.innerText = "❌ Timeout";
+    else
+        result.innerText = "❌ Network error";
+
+}
+finally {
+
+    setLoading(false);
+
+    isRunning = false;
+
+}
+
 
     showResult(data);
 
