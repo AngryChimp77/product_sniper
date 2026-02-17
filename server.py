@@ -4,14 +4,7 @@ from openai import OpenAI
 
 app = Flask(__name__, static_folder="static")
 
-    api_key=os.environ.get("OPENAI_API_KEY"),
-    timeout=30
-)
-client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY"),
-    timeout=20.0,
-    max_retries=1
-)
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 @app.route("/")
 def home():
@@ -25,7 +18,6 @@ def analyze():
     try:
 
         data = request.get_json()
-
         link = data.get("link")
 
         print("LINK:", link)
