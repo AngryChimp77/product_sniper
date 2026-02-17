@@ -193,8 +193,7 @@ async function analyze() {
 
     isRunning = true;
 
-    const input = document.getElementById("productLink");
-
+    const input = document.getElementById("link");
     const result = document.getElementById("result");
 
     const link = input.value.trim();
@@ -213,48 +212,52 @@ async function analyze() {
 
     setLoading(true);
 
-try {
+    try {
 
-    const controller = new AbortController();
+        const controller = new AbortController();
 
-    const timeout = setTimeout(() => controller.abort(), 60000);
+        const timeout = setTimeout(() => controller.abort(), 60000);
 
-    const res = await fetch("/analyze", {
+        const res = await fetch("/analyze", {
 
-        method: "POST",
+            method: "POST",
 
-        headers: {
-            "Content-Type": "application/json"
-        },
+            headers: {
+                "Content-Type": "application/json"
+            },
 
-        body: JSON.stringify({ link }),
+            body: JSON.stringify({ link }),
 
-        signal: controller.signal
+            signal: controller.signal
 
-    });
+        });
 
-    clearTimeout(timeout);
+        clearTimeout(timeout);
 
-    if (!res.ok) throw new Error("Server error");
+        if (!res.ok) throw new Error("Server error");
 
-    const data = await res.json();
+        const data = await res.json();
 
-    showResult(data);
+        showResult(data);
 
-}
-catch (err) {
+    }
 
-    if (err.name === "AbortError")
-        result.innerText = "❌ Timeout";
-    else
-        result.innerText = "❌ Network error";
+    catch (err) {
 
-}
-finally {
+        if (err.name === "AbortError")
+            result.innerText = "❌ Timeout";
+        else
+            result.innerText = "❌ Network error";
 
-    setLoading(false);
+    }
 
-    isRunning = false;
+    finally {
+
+        setLoading(false);
+
+        isRunning = false;
+
+    }
 
 }
 
