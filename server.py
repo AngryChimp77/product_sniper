@@ -34,11 +34,13 @@ def analyze():
 
         result = response.choices[0].message.content
 
-        return jsonify({
-            "score": "OK",
-            "verdict": "OK",
-            "reason": result
-        })
+return jsonify({
+    "analysis": {
+        "total": 5,
+        "verdict": "TEST",
+        "reason": result
+    }
+})
 
     except Exception as e:
 
