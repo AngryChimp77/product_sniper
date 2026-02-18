@@ -25,31 +25,34 @@ def analyze():
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "user", "content": link}
+                {
+                    "role": "user",
+                    "content": f"Analyze this product link and return score 1-10, verdict SCALE TEST or PASS, and short reason: {link}"
+                }
             ],
-            max_tokens=50
+            max_tokens=100
         )
-
-        print("OPENAI RESPONDED")
 
         result = response.choices[0].message.content
 
-return jsonify({
-    "analysis": {
-        "total": 5,
-        "verdict": "TEST",
-        "reason": result
-    }
-})
+        return jsonify({
+            "analysis": {
+                "total": 5,
+                "verdict": "TEST",
+                "reason": result
+            }
+        })
 
     except Exception as e:
 
         print("ERROR:", e)
 
         return jsonify({
-            "score": "Error",
-            "verdict": "Error",
-            "reason": str(e)
+            "analysis": {
+                "total": 0,
+                "verdict": "ERROR",
+                "reason": str(e)
+            }
         })
 
 if __name__ == "__main__":
