@@ -10,46 +10,40 @@ client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 def home():
     return send_from_directory("static", "index.html")
 
+def analyze():
 @app.route("/analyze", methods=["POST"])
 def analyze():
 
-    try:
+    print("TEST STARTED")
 
-        data = request.get_json()
-        link = data.get("link")
+    try:
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {
-                    "role": "system",
-                    "content":
-                    "You are a product research expert. "
-                    "Always return ONLY valid JSON in this format: "
-                    "{ total: number, verdict: 'TEST' or 'SCALE', reason: 'text' }."
-                },
-                {
-                    "role": "user",
-                    "content": f"Analyze this product link: {link}"
-                }
+                {"role": "user", "content": "Say hello"}
             ],
-            max_tokens=200
+            max_tokens=20
         )
 
         result = response.choices[0].message.content
 
+        print("OPENAI RESULT:", result)
+
         return jsonify({
-            "analysis": result
+            "score": "TEST",
+            "verdict": "TEST",
+            "reason": result
         })
 
     except Exception as e:
 
+        print("ERROR:", e)
+
         return jsonify({
-            "analysis": {
-                "total": 0,
-                "verdict": "ERROR",
-                "reason": str(e)
-            }
+            "score": "Error",
+            "verdict": "Error",
+            "reason": str(e)
         })
 
 if __name__ == "__main__":
