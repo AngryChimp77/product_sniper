@@ -4,7 +4,7 @@ from openai import OpenAI
 
 app = Flask(__name__, static_folder="static")
 
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
 
 @app.route("/")
@@ -15,47 +15,25 @@ def home():
 @app.route("/analyze", methods=["POST"])
 def analyze():
 
-    print("=== ANALYZE STARTED ===")
+    data = request.get_json()
+    link = data.get("link")
 
-    try:
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "user", "content": link}
+        ]
+    )
 
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "user",
-                    "content": "Say TEST SUCCESS"
-                }
-            ],
-            max_tokens=20
-        )
+    result = response.choices[0].message.content
 
-        result = response.choices[0].message.content
-
-        print("OPENAI RESULT:", result)
-
-        return jsonify({
-            "analysis": {
-                "total": 10,
-                "verdict": "WORKING",
-                "reason": result
-            }
-        })
-
-    except Exception as e:
-
-        print("OPENAI ERROR:", e)
-
-        return jsonify({
-            "analysis": {
-                "total": 0,
-                "verdict": "ERROR",
-                "reason": str(e)
-            }
-        })
+    return jsonify({
+        "score": "10",
+        "verdict": "WORKING",
+        "reason": result
+    })
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=10000)
 
