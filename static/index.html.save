@@ -112,15 +112,14 @@
   <h1>🚀 Product Sniper</h1>
   <p>Paste a product link and analyze it.</p>
 
-  <input
-    
+
 <input
-id="productLink"
+id="link"
 type="text"
 placeholder="Paste product link here"
 >
 
-<button id="analyzeBtn" onclick="analyzeProduct()">Analyze</button>
+<button id="analyzeBtn" onclick="analyze()">Analyze</button>
 
 <div id="loading" style="display:none;">
   <div class="spinner"></div>
@@ -142,52 +141,30 @@ placeholder="Paste product link here"
 </div>
 
 
-function analyze() {
-
 <script>
 
-
 let isRunning = false;
-
-
-
-document.addEventListener("DOMContentLoaded", function () {
-
-    const btn = document.getElementById("analyzeBtn");
-
-    btn.addEventListener("click", analyze);
-
-});
-
-
 
 function setLoading(state) {
 
     const btn = document.getElementById("analyzeBtn");
-
     const loading = document.getElementById("loading");
 
     if (state) {
 
         btn.disabled = true;
-
         btn.innerText = "Working...";
-
         loading.style.display = "flex";
 
     } else {
 
         btn.disabled = false;
-
         btn.innerText = "Analyze";
-
         loading.style.display = "none";
 
     }
 
 }
-
-
 
 async function analyze() {
 
@@ -196,7 +173,6 @@ async function analyze() {
     isRunning = true;
 
     const input = document.getElementById("link");
-
     const result = document.getElementById("result");
 
     const link = input.value.trim();
@@ -204,9 +180,7 @@ async function analyze() {
     if (!link) {
 
         alert("Paste link first");
-
         isRunning = false;
-
         return;
 
     }
@@ -217,21 +191,20 @@ async function analyze() {
 
     try {
 
-        const controller = new AbortController();
+        const res = await fetch("/analyze", {
 
-        const timeout = setTimeout(() => controller.abort(), 10000);
+            method: "POST",
 
-        const res = await fetch(
+            headers: {
+                "Content-Type": "application/json"
+            },
 
-            `/analyze?link=${encodeURIComponent(link)}`,
+            body: JSON.stringify({ link })
 
-            { signal: controller.signal }
+        });
 
-        );
-
-        clearTimeout(timeout);
-
-        if (!res.ok) throw new Error("Server error");
+        if (!res.ok)
+            throw new Error("Server error");
 
         const data = await res.json();
 
@@ -241,71 +214,44 @@ async function analyze() {
 
     catch (err) {
 
-        if (err.name === "AbortError")
-
-            result.innerText = "❌ Timeout";
-
-        else
-
-            result.innerText = "❌ Network error";
+        result.innerText = "❌ Error";
 
     }
 
     finally {
 
         setLoading(false);
-
         isRunning = false;
 
     }
 
 }
 
-
-
 function showResult(data) {
 
-    if (!data || !data.analysis) {
+const result = document.getElementById("result");
 
-        document.getElementById("result").innerText =
+console.log("SHOW RESULT:", data);
 
-            "❌ Invalid analysis";
 
-        return;
+return;
 
-    }
+}
 
-    let analysis = data.analysis;
 
-    if (typeof analysis === "string")
+if (data.score) {
 
-        analysis = JSON.parse(analysis);
+result.innerHTML =
+"Score: " + data.score + "/10<br>" +
+"Verdict: " + data.verdict + "<br>" +
+"Reason: " + data.reason;
 
-    document.getElementById("score").innerText =
+return;
 
-        "Score: " + analysis.total + " / 10";
+}
 
-    const verdictBox = document.getElementById("verdict");
 
-    verdictBox.innerText =
-
-        "Verdict: " + analysis.verdict;
-
-    verdictBox.style.color =
-
-        analysis.verdict === "SCALE"
-
-            ? "lime"
-
-            : analysis.verdict === "TEST"
-
-            ? "orange"
-
-            : "red";
-
-    document.getElementById("reason").innerText =
-
-        "Reason: " + analysis.reason;
+result.innerHTML = "❌ Invalid analysis";
 
 }
 

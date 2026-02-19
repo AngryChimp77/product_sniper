@@ -229,26 +229,34 @@ async function analyze() {
 
 function showResult(data) {
 
-    const result = document.getElementById("result");
+const result = document.getElementById("result");
 
-    if (!data || !data.analysis) {
+console.log("SHOW RESULT:", data);
 
-        result.innerText = "❌ Invalid analysis";
-        return;
 
-    }
+if (data.result) {
 
-    let analysis = data.analysis;
+result.innerHTML =
+"<pre>" + data.result + "</pre>";
 
-    if (typeof analysis === "string")
-        analysis = JSON.parse(analysis);
+return;
 
-    result.innerText =
-        "Score: " + analysis.total +
-        " / 10 | Verdict: " +
-        analysis.verdict +
-        " | Reason: " +
-        analysis.reason;
+}
+
+
+if (data.score) {
+
+result.innerHTML =
+"Score: " + data.score + "/10<br>" +
+"Verdict: " + data.verdict + "<br>" +
+"Reason: " + data.reason;
+
+return;
+
+}
+
+
+result.innerHTML = "❌ Invalid analysis";
 
 }
 
