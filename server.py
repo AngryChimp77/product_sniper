@@ -26,16 +26,20 @@ def analyze():
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "Analyze this product link and return JSON with total score (0-10), verdict (TEST/SCALE), and reason."
-                },
-                {
-                    "role": "user",
-                    "content": link
-                }
-            ],
+messages=[
+    {
+        "role": "system",
+        "content":
+        "You are a product research expert. "
+        "Always return ONLY valid JSON in this format: "
+        "{ total: number, verdict: 'TEST' or 'SCALE', reason: 'text' }. "
+        "Score based on product potential, demand, competition, and scalability."
+    },
+    {
+        "role": "user",
+        "content": f"Analyze this product link: {link}"
+    }
+]
             max_tokens=200
         )
 
