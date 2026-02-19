@@ -2,20 +2,14 @@ import os
 from flask import Flask, request, jsonify, send_from_directory
 from openai import OpenAI
 
-# CREATE APP FIRST
 app = Flask(__name__, static_folder="static")
 
-# OpenAI client
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-
-# Serve homepage
 @app.route("/")
 def home():
     return send_from_directory("static", "index.html")
 
-
-# Analyze endpoint
 @app.route("/analyze", methods=["POST"])
 def analyze():
 
@@ -26,20 +20,19 @@ def analyze():
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
-messages=[
-    {
-        "role": "system",
-        "content":
-        "You are a product research expert. "
-        "Always return ONLY valid JSON in this format: "
-        "{ total: number, verdict: 'TEST' or 'SCALE', reason: 'text' }. "
-        "Score based on product potential, demand, competition, and scalability."
-    },
-    {
-        "role": "user",
-        "content": f"Analyze this product link: {link}"
-    }
-]
+            messages=[
+                {
+                    "role": "system",
+                    "content":
+                    "You are a product research expert. "
+                    "Always return ONLY valid JSON in this format: "
+                    "{ total: number, verdict: 'TEST' or 'SCALE', reason: 'text' }."
+                },
+                {
+                    "role": "user",
+                    "content": f"Analyze this product link: {link}"
+                }
+            ],
             max_tokens=200
         )
 
@@ -58,7 +51,6 @@ messages=[
                 "reason": str(e)
             }
         })
-
 
 if __name__ == "__main__":
     app.run()
