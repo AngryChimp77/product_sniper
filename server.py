@@ -62,14 +62,14 @@ def analyze():
 
         soup = BeautifulSoup(response.text, "html.parser")
 
-        title = soup.title.string if soup.title else ""
+title = ""
 
-        body_text = soup.get_text(separator=" ", strip=True)
+if soup.title and soup.title.string:
+    title = soup.title.string
 
+body_text = soup.get_text(separator=" ", strip=True)
 
-        # limit size for OpenAI
-        content = (title + " " + body_text)[:4000]
-
+content = (title + " " + body_text)[:4000]
 
 
         print("CONTENT LENGTH:", len(content))
