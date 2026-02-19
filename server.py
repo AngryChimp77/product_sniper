@@ -4,9 +4,8 @@ from openai import OpenAI
 
 app = Flask(__name__, static_folder="static")
 
-client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY")
-)
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
 
 @app.route("/")
 def home():
@@ -16,7 +15,7 @@ def home():
 @app.route("/analyze", methods=["POST"])
 def analyze():
 
-    print("TEST STARTED")
+    print("=== ANALYZE STARTED ===")
 
     try:
 
@@ -25,7 +24,7 @@ def analyze():
             messages=[
                 {
                     "role": "user",
-                    "content": "Say hello"
+                    "content": "Say TEST SUCCESS"
                 }
             ],
             max_tokens=20
@@ -36,22 +35,26 @@ def analyze():
         print("OPENAI RESULT:", result)
 
         return jsonify({
-            "score": "TEST",
-            "verdict": "TEST",
-            "reason": result
+            "analysis": {
+                "total": 10,
+                "verdict": "WORKING",
+                "reason": result
+            }
         })
 
     except Exception as e:
 
-        print("ERROR:", e)
+        print("OPENAI ERROR:", e)
 
         return jsonify({
-            "score": "Error",
-            "verdict": "Error",
-            "reason": str(e)
+            "analysis": {
+                "total": 0,
+                "verdict": "ERROR",
+                "reason": str(e)
+            }
         })
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
 
