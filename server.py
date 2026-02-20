@@ -38,15 +38,24 @@ def analyze():
 
         response = requests.get(link, headers=headers, timeout=15)
 
-        soup = BeautifulSoup(response.text, "html.parser")
+soup = BeautifulSoup(response.text, "html.parser")
 
-        title = ""
+content = ""
 
-        if soup.title and soup.title.string:
-            title = soup.title.string.strip()
+scripts = soup.find_all("script")
 
-        body = soup.get_text(" ", strip=True)
+for script in scripts:
 
+    if script.string and "runParams" in script.string:
+
+        content = script.string
+
+        break
+
+
+if not content:
+
+    content = soup.get_text(" ", strip=True)
         content = title + "\n" + body
 
 
