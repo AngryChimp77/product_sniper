@@ -12,11 +12,9 @@ logging.basicConfig(level=logging.INFO)
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-
 @app.route("/")
 def serve_index():
     return send_from_directory("static", "index.html")
-
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
@@ -25,71 +23,56 @@ def analyze():
 
         data = request.get_json()
 
-        if not data or "link" not in data:
-            return jsonify({"error": "No link provided"}), 400
+        if not data:
+            return jsonify({"error": "No data"}), 400
 
-        link = data["link"]
+        link = data.get("link")
 
-        logging.info(f"Link received: {link}")
+        if not link:
+            return jsonify({"error": "No link"}), 400
+
 
         headers = {
-
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122 Safari/537.36"
-
+            "User-Agent": "Mozilla/5.0"
         }
 
         response = requests.get(link, headers=headers, timeout=15)
 
-        if response.status_code != 200:
-
-            return jsonify({"error": "Failed to fetch page"}), 500
-
-
         soup = BeautifulSoup(response.text, "html.parser")
-
 
         title = ""
 
         if soup.title and soup.title.string:
-
             title = soup.title.string.strip()
 
         body = soup.get_text(" ", strip=True)
 
-        content = str(title) + "\n" + str(body)
+        content = title + "\n" + body
 
 
-        logging.info("Scraping success")
+        prompt = f"""
+Return ONLY valid JSON.
 
-
-prompt = f"""
-
-Analyze this dropshipping product.
-
-Return your answer ONLY as valid JSON.
-
-Use this exact JSON format:
+Format:
 
 {{
-"score": number from 1 to 10,
-"verdict": "WINNER" or "LOSER",
-"reason": "short explanation"
+"score": 1,
+"verdict": "WINNER",
+"reason": "text"
 }}
 
 Product:
 
-{content[:3000]}
-
+{content[:2000]}
 """
+
 
         completion = client.chat.completions.create(
 
             model="gpt-4o-mini",
 
             messages=[
-
                 {"role": "user", "content": prompt}
-
             ],
 
             response_format={"type": "json_object"}
@@ -97,12 +80,12 @@ Product:
         )
 
 
-        result_json = completion.choices[0].message.content
+        result = completion.choices[0].message.content
 
 
         return jsonify({
 
-            "analysis": json.loads(result_json)
+            "analysis": json.loads(result)
 
         })
 
