@@ -246,16 +246,22 @@ return;
 
 if (data.analysis) {
 
-result.innerHTML =
-"Score: " + data.analysis.score + "/10<br>" +
-"Verdict: " + data.analysis.verdict + "<br>" +
+document.getElementById("score").innerHTML =
+"Score: " + data.analysis.score + "/10";
+
+document.getElementById("verdict").innerHTML =
+"Verdict: " + data.analysis.verdict;
+
+document.getElementById("reason").innerHTML =
 "Reason: " + data.analysis.reason;
 
 return;
 
 }
 
-result.innerHTML = "❌ Invalid analysis";
+document.getElementById("score").innerHTML = "";
+document.getElementById("verdict").innerHTML = "";
+document.getElementById("reason").innerHTML = "❌ Invalid analysis";
 
 }
 
