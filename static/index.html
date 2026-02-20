@@ -244,17 +244,16 @@ return;
 }
 
 
-if (data.score) {
+if (data.analysis) {
 
 result.innerHTML =
-"Score: " + data.score + "/10<br>" +
-"Verdict: " + data.verdict + "<br>" +
-"Reason: " + data.reason;
+"Score: " + data.analysis.score + "/10<br>" +
+"Verdict: " + data.analysis.verdict + "<br>" +
+"Reason: " + data.analysis.reason;
 
 return;
 
 }
-
 
 result.innerHTML = "❌ Invalid analysis";
 
