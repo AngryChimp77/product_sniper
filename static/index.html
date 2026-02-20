@@ -229,39 +229,47 @@ async function analyze() {
 
 function showResult(data) {
 
-const result = document.getElementById("result");
-
 console.log("SHOW RESULT:", data);
 
-
-if (data.result) {
-
-result.innerHTML =
-"<pre>" + data.result + "</pre>";
-
-return;
-
-}
-
-
-if (data.analysis) {
-
-document.getElementById("score").innerHTML =
-"Score: " + data.analysis.score + "/10";
-
-document.getElementById("verdict").innerHTML =
-"Verdict: " + data.analysis.verdict;
-
-document.getElementById("reason").innerHTML =
-"Reason: " + data.analysis.reason;
-
-return;
-
-}
+if (!data.analysis) {
 
 document.getElementById("score").innerHTML = "";
 document.getElementById("verdict").innerHTML = "";
 document.getElementById("reason").innerHTML = "❌ Invalid analysis";
+
+return;
+
+}
+
+const score = data.analysis.score;
+const verdict = data.analysis.verdict;
+const reason = data.analysis.reason;
+
+
+// DISPLAY IN RESULT BOX
+
+document.getElementById("score").innerHTML =
+"<strong>Score:</strong> " + score + "/10";
+
+document.getElementById("verdict").innerHTML =
+"<strong>Verdict:</strong> " + verdict;
+
+document.getElementById("reason").innerHTML =
+"<strong>Reason:</strong> " + reason;
+
+
+
+// ADD TO HISTORY
+
+const historyList = document.getElementById("history-list");
+
+const li = document.createElement("li");
+
+li.innerHTML =
+"Score: " + score +
+" | " + verdict;
+
+historyList.prepend(li);
 
 }
 
