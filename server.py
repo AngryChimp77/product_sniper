@@ -49,11 +49,33 @@ def analyze():
 
         soup = BeautifulSoup(response.text, "html.parser")
 
-        title = soup.title.string if soup.title else ""
 
+        # SAFE TITLE EXTRACTION
+        title = ""
+
+        if soup.title and soup.title.string:
+
+            title = soup.title.string.strip()
+
+        else:
+
+            logging.warning("Title not found")
+
+
+        # SAFE BODY EXTRACTION
         body = soup.get_text(" ", strip=True)
 
-        content = title + "\n" + body
+        if not body:
+
+            body = ""
+
+
+        content = str(title) + "\n" + str(body)
+
+
+        if not content.strip():
+
+            return jsonify({"error": "No content extracted"}), 500
 
 
         logging.info("Scraping success")
