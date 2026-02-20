@@ -42,40 +42,21 @@ def analyze():
 
         if response.status_code != 200:
 
-            logging.error("Scraping failed")
-
             return jsonify({"error": "Failed to fetch page"}), 500
 
 
         soup = BeautifulSoup(response.text, "html.parser")
 
 
-        # SAFE TITLE EXTRACTION
         title = ""
 
         if soup.title and soup.title.string:
 
             title = soup.title.string.strip()
 
-        else:
-
-            logging.warning("Title not found")
-
-
-        # SAFE BODY EXTRACTION
         body = soup.get_text(" ", strip=True)
 
-        if not body:
-
-            body = ""
-
-
         content = str(title) + "\n" + str(body)
-
-
-        if not content.strip():
-
-            return jsonify({"error": "No content extracted"}), 500
 
 
         logging.info("Scraping success")
@@ -85,13 +66,11 @@ def analyze():
 
 Analyze this dropshipping product.
 
-Return ONLY JSON:
+Score from 1 to 10.
 
-{{
-"score": number,
-"verdict": "WINNER" or "LOSER",
-"reason": "short reason"
-}}
+Verdict WINNER or LOSER.
+
+Reason short.
 
 Product:
 
@@ -108,20 +87,19 @@ Product:
 
                 {"role": "user", "content": prompt}
 
-            ]
+            ],
+
+            response_format={"type": "json_object"}
 
         )
 
 
-        result_text = completion.choices[0].message.content
-
-
-        result_json = json.loads(result_text)
+        result_json = completion.choices[0].message.content
 
 
         return jsonify({
 
-            "analysis": result_json
+            "analysis": json.loads(result_json)
 
         })
 
