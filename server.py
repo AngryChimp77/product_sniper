@@ -12,9 +12,11 @@ logging.basicConfig(level=logging.INFO)
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+
 @app.route("/")
 def serve_index():
     return send_from_directory("static", "index.html")
+
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
@@ -36,27 +38,48 @@ def analyze():
             "User-Agent": "Mozilla/5.0"
         }
 
+
         response = requests.get(link, headers=headers, timeout=15)
 
-soup = BeautifulSoup(response.text, "html.parser")
 
-content = ""
-
-scripts = soup.find_all("script")
-
-for script in scripts:
-
-    if script.string and "runParams" in script.string:
-
-        content = script.string
-
-        break
+        soup = BeautifulSoup(response.text, "html.parser")
 
 
-if not content:
+        content = ""
 
-    content = soup.get_text(" ", strip=True)
-        content = title + "\n" + body
+
+        # SAFE AliExpress extraction
+        scripts = soup.find_all("script")
+
+        for script in scripts:
+
+            try:
+
+                if script.string and "runParams" in script.string:
+
+                    content = script.string
+
+                    break
+
+            except:
+                pass
+
+
+        # FALLBACK if not found
+        if not content:
+
+            title = ""
+
+            if soup.title and soup.title.string:
+
+                title = soup.title.string.strip()
+
+            body = soup.get_text(" ", strip=True)
+
+            content = title + "\n" + body
+
+
+        logging.info("Content extracted")
 
 
         prompt = f"""
@@ -65,14 +88,14 @@ Return ONLY valid JSON.
 Format:
 
 {{
-"score": 1,
-"verdict": "WINNER",
-"reason": "text"
+"score": number from 1 to 10,
+"verdict": "WINNER" or "LOSER",
+"reason": "short explanation"
 }}
 
 Product:
 
-{content[:2000]}
+{content[:3000]}
 """
 
 
@@ -108,6 +131,7 @@ Product:
             "error": str(e)
 
         }), 500
+
 
 
 if __name__ == "__main__":
