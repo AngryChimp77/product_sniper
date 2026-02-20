@@ -62,22 +62,25 @@ def analyze():
         logging.info("Scraping success")
 
 
-        prompt = f"""
+prompt = f"""
 
 Analyze this dropshipping product.
 
-Score from 1 to 10.
+Return your answer ONLY as valid JSON.
 
-Verdict WINNER or LOSER.
+Use this exact JSON format:
 
-Reason short.
+{{
+"score": number from 1 to 10,
+"verdict": "WINNER" or "LOSER",
+"reason": "short explanation"
+}}
 
 Product:
 
 {content[:3000]}
 
 """
-
 
         completion = client.chat.completions.create(
 
