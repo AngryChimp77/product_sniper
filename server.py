@@ -40,13 +40,26 @@ def analyze():
 
         soup = BeautifulSoup(response.text, "html.parser")
 
-        title = soup.title.string if soup.title else ""
-        text = soup.get_text()[:3000]
-
-        content = title + "\n" + text
 
         print("CONTENT LENGTH:", len(content))
 
+title = ""
+
+if soup.title and soup.title.string:
+    title = soup.title.string
+else:
+    title = "No title"
+
+
+text = soup.get_text()
+
+if not text:
+    text = "No description"
+
+text = text[:3000]
+
+
+content = title + "\n" + text
 
         ai = client.chat.completions.create(
             model="gpt-4o-mini",
